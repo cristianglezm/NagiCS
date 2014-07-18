@@ -5,9 +5,9 @@
 ; Version: 0.06
 ; --------------------------------------------
 HWN I
-:DetectHW ; funcion para detectar el monitor
+:DetectHW ; funcion para detectar el hardware conectado
 	HWQ J
-	IFE A,[FloppyDiskInfo] ; si el id del hardware es del monitor saltas a monitor
+	IFE A,[FloppyDiskInfo]  ; si el id del hardware es del floppy disk saltas a floppydisk
 			JSR FloppyDiskDetected
 	IFE A,[ClockInfo] ; si el id del hardware es del clock saltas a clock
 			JSR ClockDetected
@@ -17,9 +17,9 @@ HWN I
 			JSR KeyBoardDetected
 	IFE A,[SleepChamberInfo] ; si el id del hardware es del sleepchamber saltas a sleepchamber
 			JSR SleepChamberDetected
-	IFE A,[MonitorInfo] ; si el id del hardware es del floppy disk saltas a floppydisk 
+	IFE A,[MonitorInfo] ; si el id del hardware es del monitor saltas a monitor
 			JSR MonitorDetected
-	ADD J,1 ; añadimos 1 a J
+	ADD J,1
     IFE J,I
     	SET PC,Main
     SET PC,DetectHW
