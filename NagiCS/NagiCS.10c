@@ -39,7 +39,7 @@ SET [J],0xF09f ;Indicador de tecla
 SET A,0 ; mode MEM_MAP_SCREEN
 SET B,0x8000 ; posicion MEMORIA RAM VIDEO
 HWI [MonitorHWaddr] ; envia interrupcion
-SET PC,POP ; canviar para el teclado
+SET PC,POP ; cambiar para el teclado
 :keyread
 SET A,1 ; interrupcion modo 1 hacia el teclado
 HWI [KeyBoardHWaddr] ; envia la interrupcion
@@ -229,7 +229,7 @@ JSR WriteMonitor
 SET [WhereAmI],0x1003
 JSR keyread
 ;*********************************************************************************
-;     Procedures Floppy Disk										             *********************
+;     Procedures Floppy Disk										             *
 ;*********************************************************************************
 :PlayDisk ; execute the disk
 JSR CheckDisk
