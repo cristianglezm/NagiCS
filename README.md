@@ -1,7 +1,5 @@
-NagiCS
-====
+# NagiCS
 
-Sistema de Control de nave hecho para el juego 0x10c.
+Control System for the spaceship for the 0x10c game.
 
-
-[DCPU16 Spec](http://pastebin.com/raw.php?i=Q4JvQvnM)
+[DCPU16 Spec](https://github.com/lucaspiller/dcpu-specifications)

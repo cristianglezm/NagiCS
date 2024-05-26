@@ -1,23 +1,23 @@
 ; --------------------------------------------
 ; Title:   NagiCS
-; Author:  Cristian Glez <cristian.glez.m@gmail.com>
+; Author:  Cristian Gonzalez <cristian.glez.m@gmail.com>
 ; Date:    26/12/2012
 ; Version: 0.06
 ; --------------------------------------------
 HWN I
-:DetectHW ; funcion para detectar el hardware conectado
+:DetectHW ; Function to detect connected hardware
 	HWQ J
-	IFE A,[FloppyDiskInfo]  ; si el id del hardware es del floppy disk saltas a floppydisk
+	IFE A,[FloppyDiskInfo]  ; If the hardware ID is for the floppy disk, jump to FloppyDiskDetected
 			JSR FloppyDiskDetected
-	IFE A,[ClockInfo] ; si el id del hardware es del clock saltas a clock
+	IFE A,[ClockInfo] ; If the hardware ID is for the clock, jump to ClockDetected
 			JSR ClockDetected
-	IFE A,[Vector3dInfo] ; si el id del hardware es del vector saltas a vector
+	IFE A,[Vector3dInfo] ; If the hardware ID is for the vector, jump to Vector3dDetected
 			JSR Vector3dDetected
-	IFE A,[KeyBoardInfo] ; si el id del hardware es del keyboard saltas a keyboard
+	IFE A,[KeyBoardInfo] ; If the hardware ID is for the keyboard, jump to KeyBoardDetected
 			JSR KeyBoardDetected
-	IFE A,[SleepChamberInfo] ; si el id del hardware es del sleepchamber saltas a sleepchamber
+	IFE A,[SleepChamberInfo] ; If the hardware ID is for the sleep chamber, jump to SleepChamberDetected
 			JSR SleepChamberDetected
-	IFE A,[MonitorInfo] ; si el id del hardware es del monitor saltas a monitor
+	IFE A,[MonitorInfo] ; If the hardware ID is for the monitor, jump to MonitorDetected
 			JSR MonitorDetected
 	ADD J,1
     IFE J,I
@@ -26,52 +26,52 @@ HWN I
 :Main
 JSR SetMenu
 :WriteMonitor
-SET A,[I] ; a = letra
-IFE A,0x0000 ; si es 0x0000 acaba, dibuja
+SET A,[I] ; a = character
+IFE A,0x0000 ; if it is 0x0000, end and draw
 	SET PC,DrawChar
-BOR A,0xf000 ; color y fondo de letra
-SET [J],A ; agregalo a la memoria
-ADD I,1 ; sube la letra
-ADD J,1 ; sube la memoria a donde escribe
-SET PC,WriteMonitor ; vuelve al loop
+BOR A,0xf000 ; character color and background
+SET [J],A ; add it to the memory
+ADD I,1 ; move to the next character
+ADD J,1 ; move to the next memory address to write
+SET PC,WriteMonitor ; return to the loop
 :DrawChar 
-SET [J],0xF09f ;Indicador de tecla
+SET [J],0xF09f ; Key indicator
 SET A,0 ; mode MEM_MAP_SCREEN
-SET B,0x8000 ; posicion MEMORIA RAM VIDEO
-HWI [MonitorHWaddr] ; envia interrupcion
-SET PC,POP ; cambiar para el teclado
+SET B,0x8000 ; video RAM position
+HWI [MonitorHWaddr] ; send interruption
+SET PC,POP ; change for the keyboard
 :keyread
-SET A,1 ; interrupcion modo 1 hacia el teclado
-HWI [KeyBoardHWaddr] ; envia la interrupcion
-SET PC,Getkey ; comprueba la tecla
+SET A,1 ; interruption mode 1 for the keyboard
+HWI [KeyBoardHWaddr] ; send interruption
+SET PC,Getkey ; check the key
 :GetKey
 SET [Opcion],C
-IFE [WhereAmI],0x4000 ; mira el menu donde esta y carga las opciones de ese menu.
-	SET PC,GetMenu  ; menu principal
-IFE [WhereAmI],0x1000 ; mira el menu donde esta y carga las opciones de ese menu.
-	SET PC,GetMenu1 ; menu sleepchamber
-IFE [WhereAmI],0x1003 ; mira el menu donde esta y carga las opciones de ese menu.
-	SET PC,GetMenu13 ; menu sleepchamber 3
-IFE [WhereAmI],0x2000 ; mira el menu donde esta y carga las opciones de ese menu.
-	SET PC,GetMenu2 ; menu 3dvector
-IFE [WhereAmI],0x3000 ; mira el menu donde esta y carga las opciones de ese menu.
-	SET PC,GetMenu3 ; menu floppy disk
-IFE [WhereAmI],0x0000 ; mira el menu donde esta y carga las opciones de ese menu.
+IFE [WhereAmI],0x4000 ; check the menu and load its options
+	SET PC,GetMenu  ; main menu
+IFE [WhereAmI],0x1000 ; check the menu and load its options
+	SET PC,GetMenu1 ; sleep chamber menu
+IFE [WhereAmI],0x1003 ; check the menu and load its options
+	SET PC,GetMenu13 ; sleep chamber submenu 3
+IFE [WhereAmI],0x2000 ; check the menu and load its options
+	SET PC,GetMenu2 ; 3D vector menu
+IFE [WhereAmI],0x3000 ; check the menu and load its options
+	SET PC,GetMenu3 ; floppy disk menu
+IFE [WhereAmI],0x0000 ; check the menu and load its options
 	SET PC,GetMenu
 SET PC,keyread
 :HALT
-SUB PC,1 ; evita que salga de memoria
+SUB PC,1 ; prevent exiting memory
 ;*********************************************************************************
 ;SetMenus															             *
 ;*********************************************************************************
-:SetMenu ; Menu Principal
-SET A,3 ; Interrupcion 3 SET_BORDER_COLOR
+:SetMenu ; Main Menu
+SET A,3 ; Interruption 3 SET_BORDER_COLOR
 SET B,0x0; COLOR
-SET Z,0 ; reinicia el contador usado por 3dvector Rotate
-HWI [MonitorHWaddr] ;Interrupcion a direccion almacenada
+SET Z,0 ; reset the counter used by 3D vector Rotate
+HWI [MonitorHWaddr] ; Interruption to stored address
 JSR ClearScreen
-SET I,Menu ; pasamos los datos a I
-SET J,0x8000 ; indicamos la memoria que va a modificar
+SET I,Menu ; pass the data to I
+SET J,0x8000 ; indicate the memory to be modified
 JSR WriteMonitor
 SET [WhereAmI],0x4000
 JSR keyread
@@ -81,28 +81,28 @@ SET I,MenuSleepChamber
 SET J,0x8000
 JSR WriteMonitor
 SET [WhereAmI],0x1000
-SET A,3 ; configura la interrupcion a 3
-SET B,[SCSkipUnit] ; copia el valor de SCSkipUnit a B
-HWI [SleepChamberHWaddr]; envia interrupcion de A a SC
+SET A,3 ; configure interruption to 3
+SET B,[SCSkipUnit] ; copy the value of SCSkipUnit to B
+HWI [SleepChamberHWaddr]; send interruption from A to SC
 JSR keyread
 :m3dVector
-JSR ClearScreen ; limpiamos pantalla
-SET I,Menu3dVector ; le pasamos el dato a la I
+JSR ClearScreen ; clear screen
+SET I,Menu3dVector ; pass the data to I
 SET J,0x8000
 JSR WriteMonitor
 SET [WhereAmI],0x2000
 JSR keyread
 :mFloppyDisk
-JSR ClearScreen ; Limpiamos Pantalla
-SET I,MenuFloppyDisk ; Pasamos los datos a la I
-SET J,0x8000 ; setup memoria de video
+JSR ClearScreen ; clear screen
+SET I,MenuFloppyDisk ; pass the data to I
+SET J,0x8000 ; set up video memory
 JSR WriteMonitor
 SET [WhereAmI],0x3000
 JSR keyread
 ;*********************************************************************************
-;Funciones con retorno															 *
+;Return functions															     *
 ;*********************************************************************************
-; configuramos las variables con las direcciones del hw
+; configure variables with hardware addresses
 :Vector3dDetected
 SET [Vector3dHWaddr],J
 SET PC,POP
@@ -122,67 +122,66 @@ SET PC,POP
 SET [MonitorHWaddr],J
 SET PC,POP
 ;*********************************************************************************
-:ClearScreen ; Bucle para limpiar la pantalla
+:ClearScreen ; Loop to clear the screen
 SET I,0
 	:ClearLoop
-	SET [0x8000 + I], 0xF020 ; Pone el Color
-	ADD I,1 ; incrementa I hacia la siguiente celda
-	IFE I,384 ; Comprueba la ultima celda
+	SET [0x8000 + I], 0xF020 ; Set color
+	ADD I,1 ; increment I to the next cell
+	IFE I,384 ; Check the last cell
 		SET PC,POP
 	SET PC, ClearLoop
-:GetMenu ; Menu Principal Opciones
-IFE [Opcion],0x0031 ; si la opcion es 1 va mSleepChamber
+:GetMenu ; Main Menu Options
+IFE [Opcion],0x0031 ; if the option is 1, go to mSleepChamber
 	JSR mSleepChamber
-IFE [Opcion],0x0032 ; si la opcion es 2 va a m3dVector
+IFE [Opcion],0x0032 ; if the option is 2, go to m3dVector
 	JSR m3dVector
-IFE [Opcion],0x0033 ; si la opcion es 3 va a mfloppydisk
+IFE [Opcion],0x0033 ; if the option is 3, go to mFloppyDisk
 	JSR mFloppyDisk
-IFE [Opcion],0x0034 ; si la opcion es 4 vuelve al menu principal
+IFE [Opcion],0x0034 ; if the option is 4, return to the main menu
 	JSR SetMenu
 SET PC,keyread
-:GetMenu1 ;Menu Sleep Chamber Opciones
-IFE [Opcion],0x0031 ; si la opcion es 1 Activate SleepChamber
+:GetMenu1 ; Sleep Chamber Menu Options
+IFE [Opcion],0x0031 ; if the option is 1, activate SleepChamber
 	JSR CheckStatus
-IFE [Opcion],0x0032 ; si la opcion es 2 Pone el numero
+IFE [Opcion],0x0032 ; if the option is 2, set the number
 	JSR SetTime
-IFE [Opcion],0x0033 ; si la opcion es 3 pone la unidad de tiempo
+IFE [Opcion],0x0033 ; if the option is 3, set the time unit
 	JSR SetTimeUnit
-IFE [Opcion],0x0034 ; si la opcion es 4 vuelve al menu principal
+IFE [Opcion],0x0034 ; if the option is 4, return to the main menu
 	JSR SetMenu
 SET PC,keyread
 :GetMenu13
-IFE [Opcion],0x0031 ; si la opcion es 1 Activate SleepChamber
+IFE [Opcion],0x0031 ; if the option is 1, activate SleepChamber
 	SET [SCSkipUnit],0x0000 ; milliseconds
-IFE [Opcion],0x0032 ; si la opcion es 2 Pone el numero
+IFE [Opcion],0x0032 ; if the option is 2, set the number
 	SET [SCSkipUnit],0x0001 ; minutes
-IFE [Opcion],0x0033 ; si la opcion es 3 pone la unidad de tiempo
+IFE [Opcion],0x0033 ; if the option is 3, set the time unit
 	SET [SCSkipUnit],0x0002 ; days
-IFE [Opcion],0x0034 ; si la opcion es 4 vuelve al menu principal
+IFE [Opcion],0x0034 ; if the option is 4, return to the main menu
 	SET [SCSkipUnit],0x0003 ; years
-IFE [Opcion],0x0035 ; si la opcion es 4 vuelve al menu principal
+IFE [Opcion],0x0035 ; if the option is 5, return to the main menu
 	JSR mSleepChamber
 SET PC,keyread
-:GetMenu2 ; Menu 3dVector Opciones
-IFE [Opcion],0x0031 ; si la opcion es 1 Muestra el mapa
+:GetMenu2 ; 3D Vector Menu Options
+IFE [Opcion],0x0031 ; if the option is 1, show the map
 	JSR ShowMap
-IFE [Opcion],0x0032 ; si la opcion es 2 Rota el mapa
+IFE [Opcion],0x0032 ; if the option is 2, rotate the map
 	JSR RotateMap
-IFE [Opcion],0x0033 ; si la opcion es 3 vuelve al menu principal
+IFE [Opcion],0x0033 ; if the option is 3, return to the main menu
 	JSR SetMenu
 SET PC,keyread
-:GetMenu3 ;Menu Floppy Disk Opciones
-IFE [Opcion],0x0031 ; si la opcion es 1 Ejecuta el disco
+:GetMenu3 ; Floppy Disk Menu Options
+IFE [Opcion],0x0031 ; if the option is 1, play the disk
 	SET PC,PlayDisk
-IFE [Opcion],0x0032 ; si la opcion es 2 Escribe en el disco
+IFE [Opcion],0x0032 ; if the option is 2, write to the disk
 	SET PC,WriteDisk
-IFE [Opcion],0x0033 ; si la opcion es 3 lee el disco
+IFE [Opcion],0x0033 ; if the option is 3, read the disk
 	SET PC,HALT
-IFE [Opcion],0x0034 ; si la opcion es 4 borra el contenido del disco
+IFE [Opcion],0x0034 ; if the option is 4, delete the disk content
 	SET PC,HALT
-IFE [Opcion],0x0035 ; si la opcion es 5 vuelve al menu principal
+IFE [Opcion],0x0035 ; if the option is 5, return to the main menu
 	JSR SetMenu
 SET PC,keyread
-
 ;*********************************************************************************
 ;     Procedures Sleep Chamber										             *
 ;*********************************************************************************
@@ -229,7 +228,52 @@ JSR WriteMonitor
 SET [WhereAmI],0x1003
 JSR keyread
 ;*********************************************************************************
-;     Procedures Floppy Disk										             *
+;     Procedures Sleep Chamber                                                    *
+;*********************************************************************************
+:CheckStatus
+SET A,0 ; set interruption to 0 GET_STATUS
+HWI [SleepChamberHWaddr] ; send interruption to get status
+IFE C,1 ; if C equals 1, activate sleep chamber
+	JSR ActiveSC
+IFE B,0x0000 ; set Status 0
+	SET X,0
+IFE B,0x0001 ; set Status 1
+	SET X,1
+IFE B,0x0002 ; set Status 2
+	SET X,2
+IFE B,0x0003 ; set Status 3
+	SET X,3
+IFE B,0x0004 ; set Status 4
+	SET X,4
+IFE B,0x0005 ; set Status 5
+	SET X,5
+IFE B,0x0006 ; set Status 6
+	SET X,6
+IFE B,0xffff ; set Status 0
+	SET X,0
+JSR PrintStatusSC ; print the status
+:StatusSCOption ; list of statuses
+DAT Status0,Status1,Status2,Status3,Status4,Status5,Status6
+:PrintStatusSC ; print the status
+JSR ClearScreen 
+SET I,[StatusSCOption + X] ; Status + position
+SET J,0x8000
+JSR WriteMonitor
+JSR keyread
+:ActiveSC
+SET A,2
+HWI [SleepChamberHWaddr]
+JSR keyread
+:SetTime
+:SetTimeUnit
+JSR ClearScreen
+SET I,MenuSetTimeUnit
+SET J,0x8000
+JSR WriteMonitor
+SET [WhereAmI],0x1003
+JSR keyread
+;*********************************************************************************
+;     Procedures Floppy Disk                                                      *
 ;*********************************************************************************
 :PlayDisk ; execute the disk
 JSR CheckDisk
@@ -245,10 +289,10 @@ SET Y,1
 SET A,3
 HWI [FloppyDiskHWaddr]
 JSR keyread
-:CheckDisk ; envia interrupcion y comprueba el estado
+:CheckDisk ; send interruption and check the status
 SET A,0
 HWI [FloppyDiskHWaddr]
-:CheckStatusFD ; check the status of the disk and if is ready returns where is had been called
+:CheckStatusFD ; check the status of the disk and if ready, return to where it was called
 IFE B,0x0000 ; no media
 	SET X,0
 IFE B,0x0001 ; disk ready
@@ -267,236 +311,239 @@ IFE C,0x0001 ; busy
 	SET Y,1
 IFE C,0x0002 ; no media
 	SET Y,2 
-IFE C,0x0003 ; Protected
+IFE C,0x0003 ; protected
 	SET Y,3
 IFE C,0x0004 ; ejected while reading or writing
 	SET Y,4
-IFE C,0x0005 ;bad sector
+IFE C,0x0005 ; bad sector
 	SET Y,5
-IFE C,0xffff ; Broken
+IFE C,0xffff ; broken
 	SET Y,6
 IFE Y,0
-	SET PC,POP ; returns if there's no problem
+	SET PC,POP ; return if there's no problem
 SET PC,PrintErrorFD
 :StatusFD
 DAT StatusFD0,StatusFD1,StatusFD2,StatusFD3
 :ErrorFD
 DAT ErrorFD0,ErrorFD1,ErrorFD2,ErrorFD3,ErrorFD4,ErrorFD5
-:PrintStatusFD ; print the status message in the screen
+:PrintStatusFD ; print the status message on the screen
 JSR ClearScreen 
 SET I,[StatusFD + X] ; Status + position
 SET J,0x8000
 JSR WriteMonitor
 JSR keyread
-:PrintErrorFD ; print the error message in the screen
+:PrintErrorFD ; print the error message on the screen
 JSR ClearScreen 
 SET I,[ErrorFD + Y] ; Status + position
 SET J,0x8000
 JSR WriteMonitor
 JSR keyread
 ;*********************************************************************************
-;     Procedures 3dVector										                 *
+;     Procedures 3D Vector                                                        *
 ;*********************************************************************************
-:ShowMap ; Muestra el mapa por el vector 3d
-SET A,1 ; interrupcion enviada hacia el 3dvector
-HWI [Vector3dHWaddr] ; envia interrupcion MAP_3DVector
-JSR keyread ; sigue leyendo tecla
+:ShowMap ; Display the map using the 3D vector
+SET A,1 ; interruption sent to the 3D vector
+HWI [Vector3dHWaddr] ; send interruption MAP_3DVector
+JSR keyread ; keep reading key input
 :RotateMap
-SET X,Z ; Rotacion del mapa
-SET A,2 ; set interrupcion ROTATION
+SET X,Z ; rotation of the map
+SET A,2 ; set interruption ROTATION
 ADD Z,1
-HWI [Vector3dHWaddr] ; envia interrupcion
+HWI [Vector3dHWaddr] ; send interruption
 JSR keyread
 ;*********************************************************************************
-; DATOS generales del programa                                                   *
+; General Program Data                                                           *
 ;*********************************************************************************
- :MonitorInfo ;Informacion del monitor
+ :MonitorInfo ; Monitor Information
 DAT 0xf615,0x7349 ; ID
-DAT 0x1802 ;Version monitor
-DAT 0x1c6c,0x8b36 ; Fabricante NYA_ELEKTRISKA
+DAT 0x1802 ; Monitor Version
+DAT 0x1c6c,0x8b36 ; Manufacturer NYA_ELEKTRISKA
 :MonitorHWaddr
-DAT 0xffff ; direccion HW-Monitor
-:KeyBoardInfo ;INFO Generic Keyboard (compatible)
+DAT 0xffff ; HW address of the monitor
+:KeyBoardInfo ; INFO Generic Keyboard (compatible)
 DAT 0x7406,0x30cf ; ID
 DAT 1 ; Version
 :keyboardState
 DAT 0
 :KeyBoardHWaddr
-DAT 0xffff ; direccion del teclado (variable)
-:ClockInfo; INFO Generic Clock (compatible)
+DAT 0xffff ; HW address of the keyboard (variable)
+:ClockInfo ; INFO Generic Clock (compatible)
 DAT 0xb402,0x12d0 ; ID
-DAT 1 ; version
+DAT 1 ; Version
 :ClockHWaddr
-DAT 0xffff ; direccion del reloj (variable)
+DAT 0xffff ; HW address of the clock (variable)
 :Opcion
-DAT 0x0000 ;0x031 =1, 0x032 =2 ,0x033 = 3,0x034 = 4,0x035 = 5
+DAT 0x0000 ; 0x031 =1, 0x032 =2, 0x033 = 3, 0x034 = 4, 0x035 = 5
 :WhereAmI
-DAT 0x0000 ;0x1000 = SleepChamber,0x2000= m3dVector,0x3000=mfloppyDisk,0x4000=menu principal
-;0x1003 submenu sleepchamber 3
+DAT 0x0000 ; 0x1000 = SleepChamber, 0x2000 = 3DVector, 0x3000 = FloppyDisk, 0x4000 = Main menu
+; 0x1003 submenu SleepChamber 3
 ;*********************************************************************************
-; DATOS DEL Menu Principal                                                       *
+; Main Menu Data                                                                 *
 ;*********************************************************************************
 :Menu
- dat "NagiCS                          "
+ DAT "NagiCS                          "
  DAT "Menu:                           "
  DAT " 1. SleepChamber                "
- DAT " 2. 3dVector                    "
+ DAT " 2. 3DVector                    "
  DAT " 3. Floppy Disk                 "
- DAT "Option:",0
+ DAT "Option:", 0
 ;*********************************************************************************
-; DATOS DEL Menu SleepChamber                                                    *
+; SleepChamber Menu Data                                                         *
 ;*********************************************************************************
- :MenuSleepChamber
+:MenuSleepChamber
  DAT "Sleep Chamber Menu:             "
  DAT " 1. Activate                    "
  DAT " 2. Set Unit                    "
- DAT " 3. Set Skip Unit(default ms)   "
- DAT " 4. Return Menu                 "
- DAT "Opcion:",0
+ DAT " 3. Set Skip Unit (default ms)  "
+ DAT " 4. Return to Menu              "
+ DAT "Option:", 0
 :MenuSetTimeUnit
  DAT "Set Skip Unit:                  "
- DAT "  1.MilliSeconds                "
- DAT "  2.Minutes                     "
- DAT "  3.Days                        "
- DAT "  4.Years                       "
- DAT "  5.Return Menu                 "
- DAT " Option:",0
+ DAT "  1. Milliseconds               "
+ DAT "  2. Minutes                    "
+ DAT "  3. Days                       "
+ DAT "  4. Years                      "
+ DAT "  5. Return to Menu             "
+ DAT " Option:", 0
 :Status0
-DAT "                                 "
-DAT "                                 "
-DAT " EVACUATE VESSEL IMMEDIATELY     "
-DAT "    Press 4 to return menu       ",0
+ DAT "                                 "
+ DAT "                                 "
+ DAT " EVACUATE VESSEL IMMEDIATELY     "
+ DAT "    Press 4 to return to menu    ", 0
 :Status1
-DAT "                                 "
-DAT "                                 "
-DAT "       Not In a Vacuum           "
-DAT "    Press 4 to return menu       ",0
+ DAT "                                 "
+ DAT "                                 "
+ DAT "       Not In a Vacuum           "
+ DAT "    Press 4 to return to menu    ", 0
 :Status2
-DAT "                                 "
-DAT "                                 "
-DAT "      Not enough fuel            "
-DAT "    Press 4 to return menu       ",0
+ DAT "                                 "
+ DAT "                                 "
+ DAT "      Not enough fuel            "
+ DAT "    Press 4 to return to menu    ", 0
 :Status3
-DAT "                                 "
-DAT "                                 "
-DAT "Inhomogeneous gravitational field"
-DAT "    Press 4 to return menu       ",0
+ DAT "                                 "
+ DAT "                                 "
+ DAT "Inhomogeneous gravitational field"
+ DAT "    Press 4 to return to menu    ", 0
 :Status4
-DAT "                                 "
-DAT "                                 "
-DAT "  Too much angular momentum      "
-DAT "    Press 4 to return menu       ",0
+ DAT "                                 "
+ DAT "                                 "
+ DAT "  Too much angular momentum      "
+ DAT "    Press 4 to return to menu    ", 0
 :Status5
-DAT "                                 "
-DAT "                                 "
-DAT " One or more cell doors are open "
-DAT "    Press 4 to return menu       ",0
+ DAT "                                 "
+ DAT "                                 "
+ DAT " One or more cell doors are open "
+ DAT "    Press 4 to return to menu    ", 0
 :Status6
-DAT "                                 "
-DAT "                                 "
-DAT "      Mechanical error           "
-DAT "    Press 4 to return menu       ",0
+ DAT "                                 "
+ DAT "                                 "
+ DAT "      Mechanical error           "
+ DAT "    Press 4 to return to menu    ", 0
 :SleepChamberInfo ; INFO SPC2000 - Suspension Chamber 2000
-DAT 0x1d9d,0x40e4 ; ID
-DAT 0x005e ; Version
-DAT 0x1c6c,0x8b36 ; Fabricante NYA_ELEKTRISKA
+ DAT 0x1d9d, 0x40e4 ; ID
+ DAT 0x005e ; Version
+ DAT 0x1c6c, 0x8b36 ; Manufacturer NYA_ELEKTRISKA
 :SCSkipUnit
-DAT 0x0000 ;0x0000=Milliseconds
-            ;0x0001=Minutes
-            ;0x0002=Days
-            ;0x0003=Years
+ DAT 0x0000 ; 0x0000 = Milliseconds
+             ; 0x0001 = Minutes
+             ; 0x0002 = Days
+             ; 0x0003 = Years
 :SCStatus
-DAT 0x0000 ; 0x0000=EVACUATE VESSEL IMMEDIATELY
-;          0x0001: Not in a vacuum
-;          0x0002: Not enough fuel
-;          0x0003: Inhomogeneous gravitational field
-;          0x0004: Too much angular momentum
-;          0x0005: One or more cell doors are open
-;          0x0006: Mechanical error
-;          0xffff: Unknown error - EVACUATE VESSEL IMMEDIATELY
+ DAT 0x0000 ; 0x0000 = EVACUATE VESSEL IMMEDIATELY
+             ; 0x0001 = Not in a vacuum
+             ; 0x0002 = Not enough fuel
+             ; 0x0003 = Inhomogeneous gravitational field
+             ; 0x0004 = Too much angular momentum
+             ; 0x0005 = One or more cell doors are open
+             ; 0x0006 = Mechanical error
+             ; 0xffff = Unknown error - EVACUATE VESSEL IMMEDIATELY
 :SleepChamberHWaddr
-DAT 0xffff
+ DAT 0xffff ; HW address of the Sleep Chamber
 ;*********************************************************************************
-; DATOS DEL Menu 3dVector                                                        *
+; 3D Vector Menu Data                                                            *
 ;*********************************************************************************
- :Menu3dVector
+:Menu3dVector
  DAT "3D Vector Menu:                 "
  DAT " 1. Show Map                    "
  DAT " 2. Rotate Map                  "
- DAT " 3. Return Menu                 "
- DAT "Opcion:",0
- :Vector3dInfo ;INFO Mackapar Suspended Particle Exciter Display, Rev 3 (SPED-3) 
-DAT 0xbf3c,0x42ba  ; ID
-DAT 0x0003 ; Version
-DAT 0x1eb3,0x7e91 ; Fabricante MACKAPAR
+ DAT " 3. Return to Menu              "
+ DAT "Option:", 0
+:Vector3dInfo ; INFO Mackapar Suspended Particle Exciter Display, Rev 3 (SPED-3) 
+ DAT 0xbf3c, 0x42ba ; ID
+ DAT 0x0003 ; Version
+ DAT 0x1eb3, 0x7e91 ; Manufacturer MACKAPAR
 :Vector3dError
-DAT 0x0000 ;ERROR_NONE    There's been no error since the last poll.
-;   0xffff =ERROR_BROKEN  There's been some major software or hardware problem,
-                        ;        try turning off and turning on the device again.
+ DAT 0x0000 ; ERROR_NONE - There's been no error since the last poll.
+ ;          0xffff = ERROR_BROKEN - There's been some major software or hardware problem,
+ ;                                  try turning off and turning on the device again.
 :Vector3dStatus
-DAT 0x0000 ;STATE_NO_DATA   No vertices queued up, device is in stand-by   
-;   0x0001 STATE_RUNNING    The device is projecting lines
-;   0x0002 STATE_TURNING    The device is projecting lines and turning
+ DAT 0x0000 ; STATE_NO_DATA - No vertices queued up, device is in stand-by   
+ ;          0x0001 STATE_RUNNING - The device is projecting lines
+ ;          0x0002 STATE_TURNING - The device is projecting lines and turning
 :Vector3dX
-DAT 0x0000
+ DAT 0x0000
 :Vector3dHWaddr
-DAT 0xffff
+ DAT 0xffff ; HW address of the 3D Vector
 ;*********************************************************************************
-; DATOS DEL Menu FloppyDisk                                                      *
+; Floppy Disk Menu Data                                                          *
 ;*********************************************************************************
- :MenuFloppyDisk
+:MenuFloppyDisk
  DAT "Floppy Disk Menu:               "
  DAT "    1. Play Disk                "
  DAT "    2. Write Disk               "
  DAT "    3. Read Disk                "
  DAT "    4. Delete Disk              "
- DAT "    5. Return Menu              "
- DAT "Opcion:",0
+ DAT "    5. Return to Menu           "
+ DAT "Option:", 0
 :StatusFD0
  DAT "      No Media                  "
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :StatusFD1
  DAT "     Disk Ready                 "
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :StatusFD2
  DAT "   Disk With Protection         "
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :StatusFD3
  DAT "         Busy                   "
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :ErrorFD0
- DAT "     NO  Error                  "
- DAT "    Press 5 To return           ",0
+ DAT "     NO Error                   "
+ DAT "    Press 5 to return           ", 0
 :ErrorFD1
  DAT "          Busy                  "
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :ErrorFD2
  DAT "       No Media                 "
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :ErrorFD3
  DAT "     Disk Protected             "
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :ErrorFD4
  DAT "      The floppy was            "
  DAT "removed while reading or writing"
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :ErrorFD5
  DAT "      Disk Broken               "
- DAT "    Press 5 To return           ",0
+ DAT "    Press 5 to return           ", 0
 :FloppyDiskInfo ; INFO Mackapar 3.5" Floppy Drive (M35FD) 
-DAT 0x24c5,0x4fd5 ; ID
-DAT 0x1eb3,0x7e91 ; Fabricante MACKAPAR
-DAT 0x000b ; Version
-:FloppyState ; Estado del FloppyDisk
-DAT 0x0000 ;0x0000=STATE_NO_MEDIA, 0x0001=STATE_READY, 0x0002=STATE_READY_WP, 0x0003=STATE_BUSY
+ DAT 0x24c5, 0x4fd5 ; ID
+ DAT 0x1eb3, 0x7e91 ; Manufacturer MACKAPAR
+ DAT 0x000b ; Version
+:FloppyState ; Floppy Disk Status
+ DAT 0x0000 ; 0x0000 = STATE_NO_MEDIA
+ ;          0x0001 = STATE_READY
+ ;          0x0002 = STATE_READY_WP
+ ;          0x0003 = STATE_BUSY
 :FloppyError
-DAT 0x0000 ;0x0000=ERROR_NONE,There's been no error since the last poll.
-;           0x0001=ERROR_BUSY, Drive is busy performing an action
-;           0x0002=ERROR_NO_MEDIA,Attempted to read or write with no floppy inserted.
-;			0x0003=ERROR_PROTECTED,Attempted to write to write protected floppy.
-;			0x0004=ERROR_EJECT,The floppy was removed while reading or writing.
-;			0x0005=ERROR_BAD_SECTOR, The requested sector is broken, the data on it is lost.
-;			0xffff=ERROR_BROKEN,There's been some major software or hardware problem,
-;                               try turning off and turning on the device again.
+ DAT 0x0000 ; 0x0000 = ERROR_NONE - There's been no error since the last poll.
+ ;          0x0001 = ERROR_BUSY - Drive is busy performing an action.
+ ;          0x0002 = ERROR_NO_MEDIA - Attempted to read or write with no floppy inserted.
+ ;          0x0003 = ERROR_PROTECTED - Attempted to write to a write-protected floppy.
+ ;          0x0004 = ERROR_EJECT - The floppy was removed while reading or writing.
+ ;          0x0005 = ERROR_BAD_SECTOR - The requested sector is broken, the data on it is lost.
+ ;          0xffff = ERROR_BROKEN - There's been some major software or hardware problem,
+ ;                                 try turning off and turning on the device again.
 :FloppyDiskHWaddr
-DAT 0xffff
+ DAT 0xffff ; HW address of the Floppy Disk
